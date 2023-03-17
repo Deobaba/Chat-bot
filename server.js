@@ -7,6 +7,8 @@ const server = http.createServer(app)
 const io = socketIO(server)
 const {generateMessage } = require('./public/generate')
 const publicPath = path.join(__dirname,"./public")
+const {Users} = require('./users')
+let users = new Users
 
 app.use(express.static(publicPath))
 
@@ -33,45 +35,121 @@ let menuList = [
     }
 ]
 
+
+
+let instructions = [
+    'Enter 1 to Place Order',
+    'Enter 99 to CheckOut Order',
+    'Enter 98 to Order History',
+    'Enter 97 to Current Order',
+    'Enter 0 to Cancel Order'
+]
+
 io.on('connection', (socket)=>{
 
     // receeives client name 1
     socket.on('clientName', (username)=>{
-        console.log(username)
+        // console.log(username)
+
+        users.addUser(socket.id,username)
         // server sends 2
         socket.emit('joinMessage',generateMessage('ChatBot', `${username},Welcome to DeoStaurant`))
+        socket.emit('instructionList',generateMessage('ChatBot', instructions))
 
+       
     })
 
     socket.on('client',(message)=>{
-        
-        socket.emit('clientMessage', generateMessage(message.clientName, message.message))
+
+        let user = users.getUser(socket.id)
+        socket.emit('clientMessage', generateMessage(user.name, message.message))
     })
 
     socket.on('inputMessage', (message)=>{
-        if(message === '1'){
-            socket.emit('clientMessage', generateMessage('ME','My Order'))
 
-            // for (let i = 0; i< menuList.length;i++){
-            //     socket.emit('menuList', generateMessage('ChatBot',menuList[i]) )
-            // }
+        
+
+        let user = users.getUser(socket.id)
+        console.log(user)
+
+        if(message === '1'){
+            
+            socket.emit('clientMessage', generateMessage(user.name,'My Order'))
+
             socket.emit('menuList', generateMessage('ChatBot',menuList) )
+
+            user.seenMenuList = 'yes'
         }
         else if(message === '99'){
-            socket.emit('clientMessage', generateMessage('ME','Checkout My Order'))
+
+            // console.log(user.currentOrder)
+            if(user.currentOrder.length == 0){
+                socket.emit('clientMessage', generateMessage(user.name,'Checkout My Order'))
+                socket.emit('serverMessage', generateMessage('ChatBot','You are yet to make any Order')) 
+                return
+            }
+            socket.emit('clientMessage', generateMessage(user.name,'Checkout My Order'))
             socket.emit('serverMessage', generateMessage('ChatBot','Checkout Order'))
+            socket.emit('menuList', generateMessage('ChatBot',user.currentOrder))
+            users.addOrderToHistory(socket.id)
+            users.deleteCurrentOrder(socket.id)
         }
         else if(message === '98'){
-            socket.emit('clientMessage', generateMessage('ME','My Order History'))
+
+            if(user.orderHistory.length == 0){
+                socket.emit('clientMessage', generateMessage(user.name,'My Order History'))
+                socket.emit('serverMessage', generateMessage('ChatBot','Your Order History list is empty')) 
+                return
+              }
+
+            socket.emit('clientMessage', generateMessage(user.name,'My Order History'))
             socket.emit('serverMessage', generateMessage('ChatBot','Order History'))
+            socket.emit('menuList', generateMessage('ChatBot',user.orderHistory))
+            
         }
         else if(message === '97'){
-            socket.emit('clientMessage', generateMessage('ME','My Current Order'))
-            socket.emit('serverMessage', generateMessage('ChatBot','Current Order'))
+
+            if(user.currentOrder.length == 0){
+                socket.emit('clientMessage', generateMessage(user.name,'My Current Order'))
+                socket.emit('serverMessage', generateMessage('ChatBot','Your current order list is empty'))
+                return
+              }
+            socket.emit('clientMessage', generateMessage(user.name,'My Current Order'))
+            socket.emit('menuList', generateMessage('ChatBot',user.currentOrder))
         }
         else if(message === '0'){
-            socket.emit('clientMessage', generateMessage('ME','Cancel Order'))
-            socket.emit('serverMessage', generateMessage('ChatBot','Cancel Order'))
+            if(user.currentOrder.length == 0){
+                socket.emit('clientMessage', generateMessage(user.name,'Cancel Order'))
+                socket.emit('serverMessage', generateMessage('ChatBot','Your current order list is empty')) 
+                return 
+              }
+            socket.emit('clientMessage', generateMessage(user.name,'Cancel Order'))
+            socket.emit('menuList', generateMessage('ChatBot',user.currentOrder))
+            socket.emit('serverMessage', generateMessage('ChatBot','Order cancelled'))
+            users.deleteCurrentOrder(socket.id)
+        }
+        else{
+            if(user.seenMenuList == 'No'){
+                socket.emit('clientMessage', generateMessage(user.name,message))
+                socket.emit('serverMessage', generateMessage('ChatBot','Wrong Command'))
+                return
+            }
+            let mealnumber = parseInt(message)
+            let meal = menuList.filter(user => user.number === mealnumber )
+            // console.log(meal)
+
+            if(meal.length !== 0){
+
+                users.addCurrentOrder(socket.id,meal[0])
+        
+                socket.emit('clientMessage', generateMessage(user.name,`MenuList Number - ${mealnumber}`))
+                socket.emit('serverMessage', generateMessage('ChatBot','You Ordered'))
+                socket.emit('menuList', generateMessage('ChatBot',meal))
+            }
+            else{
+                socket.emit('clientMessage', generateMessage(user.name,`MenuList Number - ${mealnumber}`))
+                socket.emit('serverMessage', generateMessage('ChatBot','Not In The MenuList'))
+            }
         }
     } )
 

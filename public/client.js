@@ -6,7 +6,6 @@ socket.on('connect', function (){
 
 })
 
-let clientName ;
 
 const app = document.querySelector('.app')
 
@@ -20,7 +19,6 @@ app.querySelector('.join-screen #join-user').addEventListener('click',function (
     }
     // send username to client 1
     socket.emit('clientName', username)
-    clientName =username
     app.querySelector('.join-screen').classList.remove('active')
     app.querySelector('.chat-screen ').classList.add('active')
 })
@@ -39,6 +37,10 @@ socket.on('menuList', (message)=>{
     // console.log(message)
     menuList(message)
 })
+socket.on('instructionList', (message)=>{
+    // console.log(message)
+    instructions(message)
+})
 socket.on('clientMessage',(message)=>{
     renderMessage('client',message)
 })
@@ -49,19 +51,22 @@ app.querySelector('.chat-screen #send-message').addEventListener('click',functio
     if(message.length == 0){
         return
     }
-    let requestArray = ['1','99','98','97','0']
-    if (requestArray.includes(message)){
-        socket.emit('inputMessage', message)
-        document.querySelector('.chat-screen #message-input').value=''
-        return
-    }
+    socket.emit('inputMessage', message)
+    document.querySelector('.chat-screen #message-input').value=''
+
+    // let requestArray = ['1','99','98','97','0']
+    // if (requestArray.includes(message)){
+    //     socket.emit('inputMessage', message)
+    //     document.querySelector('.chat-screen #message-input').value=''
+    //     return
+    // }
 
     // sends client message to server
-    else if(typeof(message) === 'string'){
-        socket.emit('client', {message,clientName})
-    document.querySelector('.chat-screen #message-input').value=''
-    return
-    }
+    // else if(typeof(message) === 'string'){
+    //     socket.emit('client', {message})
+    // document.querySelector('.chat-screen #message-input').value=''
+    // return
+    // }
 })
 
 socket.on('disconnect', function (){
@@ -110,17 +115,6 @@ function menuList (message) {
     let el = document.createElement('div')
     el.setAttribute('class', 'message other-message')
     
-    // for(let i = 0; i < message.text.length; i++){
-
-        // el.innerHTML = `
-        // <div>
-        // <div class='name'>DEO</div>
-        // <div class='text'>${message.text[i].number}.${message.text[i].meal}-#${message.text[i].price}</div>
-        // <div class='text'>${formattedTime}</div>
-        // </div>   
-        // `
-
-    // }
     message.text.forEach(meal => {
 
         let mealItem = document.createElement('div')
@@ -131,29 +125,32 @@ function menuList (message) {
 
         
     });
-    // message.text.forEach(meal => {
 
-    //     el.innerHTML= `
-    //     <div>
-    //     <div class='name'>DEO</div>
-    //     <div class='text'>${meal.number}.${meal.meal}-#${meal.price}</div>
-    //     <div class='text'>${formattedTime}</div>
-    //     </div>   
-    //     `
+    messageContainer.appendChild(el)
 
-    //  });
-    //  el.innerHTML = itemList
+    messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight
+
+}
+
+function instructions (message) {
+    let messageContainer = app.querySelector('.chat-screen .messages')
+    const formattedTime = moment(message.createdAt).format('LT')
+    console.log(message)
+
+    let el = document.createElement('div')
+    el.setAttribute('class', 'message other-message')
     
+    message.text.forEach(instruct => {
 
+        let instructionItem = document.createElement('div')
+        instructionItem. setAttribute('class', 'mealItem')
+        let instructionText = document.createTextNode(`${instruct}`)
+        instructionItem.appendChild(instructionText)
+        el.appendChild(instructionItem)
 
+        
+    });
 
-    // el.innerHTML = `
-    // <div>
-    // <div class='name'>DEO</div>
-    // <div class='text'>${message.text}</div>
-    // <div class='text'>${formattedTime}</div>
-    // </div>
-    // `
     messageContainer.appendChild(el)
 
     messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight
