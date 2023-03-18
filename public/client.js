@@ -37,6 +37,10 @@ socket.on('menuList', (message)=>{
     // console.log(message)
     menuList(message)
 })
+socket.on('mealOrdered', (message)=>{
+    // console.log(message)
+    mealOrdered(message)
+})
 socket.on('instructionList', (message)=>{
     // console.log(message)
     instructions(message)
@@ -54,19 +58,8 @@ app.querySelector('.chat-screen #send-message').addEventListener('click',functio
     socket.emit('inputMessage', message)
     document.querySelector('.chat-screen #message-input').value=''
 
-    // let requestArray = ['1','99','98','97','0']
-    // if (requestArray.includes(message)){
-    //     socket.emit('inputMessage', message)
-    //     document.querySelector('.chat-screen #message-input').value=''
-    //     return
-    // }
-
-    // sends client message to server
-    // else if(typeof(message) === 'string'){
-    //     socket.emit('client', {message})
-    // document.querySelector('.chat-screen #message-input').value=''
-    // return
-    // }
+        // socket.emit('client', {message})
+  
 })
 
 socket.on('disconnect', function (){
@@ -109,7 +102,7 @@ function renderMessage(sender,message){
 
 function menuList (message) {
     let messageContainer = app.querySelector('.chat-screen .messages')
-    const formattedTime = moment(message.createdAt).format('LT')
+    // const formattedTime = moment(message.createdAt).format('LT')
     console.log(message)
 
     let el = document.createElement('div')
@@ -119,7 +112,32 @@ function menuList (message) {
 
         let mealItem = document.createElement('div')
         mealItem. setAttribute('class', 'mealItem')
-        let mealText = document.createTextNode(`${meal.number}.${meal.meal} - #${meal.price}`)
+        let mealText = document.createTextNode(`Enter ${meal.number} to Order ${meal.meal} - #${meal.price}`)
+        mealItem.appendChild(mealText)
+        el.appendChild(mealItem)
+
+        
+    });
+
+    messageContainer.appendChild(el)
+
+    messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight
+
+}
+
+function mealOrdered (message) {
+    let messageContainer = app.querySelector('.chat-screen .messages')
+    // const formattedTime = moment(message.createdAt).format('LT')
+    console.log(message)
+
+    let el = document.createElement('div')
+    el.setAttribute('class', 'message other-message')
+    
+    message.text.forEach(meal => {
+
+        let mealItem = document.createElement('div')
+        mealItem. setAttribute('class', 'mealItem')
+        let mealText = document.createTextNode(`${meal.meal} - #${meal.price}`)
         mealItem.appendChild(mealText)
         el.appendChild(mealItem)
 

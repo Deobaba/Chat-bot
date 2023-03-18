@@ -31,9 +31,14 @@ class Users {
         user.orderHistory.push(element)
         
       });
-      
+    
   
       return user
+    }
+    addCurrentPrice (id){
+      let users = this.getUser(id)
+      let priceArray = users.map(user => user.currentOrder.price)
+      return priceArray
     }
   
     deleteCurrentOrder(id){
