@@ -23,9 +23,9 @@ app.querySelector('.join-screen #join-user').addEventListener('click',function (
     app.querySelector('.chat-screen ').classList.add('active')
 })
 
-// receives server message 2
+// receives server message 
 socket.on('joinMessage', (message)=>{
-    // console.log(message)
+    
     renderMessage('server',message)
 })
 
@@ -34,15 +34,15 @@ socket.on('serverMessage', (message)=>{
     renderMessage('server',message)
 })
 socket.on('menuList', (message)=>{
-    // console.log(message)
+    
     menuList(message)
 })
 socket.on('mealOrdered', (message)=>{
-    // console.log(message)
+    
     mealOrdered(message)
 })
 socket.on('instructionList', (message)=>{
-    // console.log(message)
+    
     instructions(message)
 })
 socket.on('clientMessage',(message)=>{
@@ -102,7 +102,6 @@ function renderMessage(sender,message){
 
 function menuList (message) {
     let messageContainer = app.querySelector('.chat-screen .messages')
-    // const formattedTime = moment(message.createdAt).format('LT')
     console.log(message)
 
     let el = document.createElement('div')
@@ -120,14 +119,15 @@ function menuList (message) {
     });
 
     messageContainer.appendChild(el)
+    
+
 
     messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight
 
 }
-
+// function to display orders
 function mealOrdered (message) {
     let messageContainer = app.querySelector('.chat-screen .messages')
-    // const formattedTime = moment(message.createdAt).format('LT')
     console.log(message)
 
     let el = document.createElement('div')
@@ -149,7 +149,7 @@ function mealOrdered (message) {
     messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight
 
 }
-
+// function to display instructions
 function instructions (message) {
     let messageContainer = app.querySelector('.chat-screen .messages')
     const formattedTime = moment(message.createdAt).format('LT')
@@ -174,3 +174,7 @@ function instructions (message) {
     messageContainer.scrollTop = messageContainer.scrollHeight - messageContainer.clientHeight
 
 }
+
+app.querySelector('.chat-screen #exit-chat').addEventListener('click',function(){
+    window.location.href = window.location.href    
+})
